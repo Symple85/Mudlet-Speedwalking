@@ -1,0 +1,361 @@
+swinput = swinput or {}
+swnotes = swnotes or {}
+walklist = walklist or {}
+walkdelay = walkdelay or 0
+myspeedwalks = myspeedwalks or {}
+swhome = getMudletHomeDir()
+function SaveMyData()
+  table.save(swhome.."/myspeedwalks.lua", myspeedwalks)
+end
+AutoSaveMyData = tempTimer(1, SaveMyData, true)
+
+if not io.exists(swhome.."/myspeedwalks.lua") then
+  f = io.open(swhome.."/myspeedwalks.lua", "a")
+  f:write("")
+  f:close()
+else
+  table.load(swhome.."/myspeedwalks.lua", myspeedwalks)
+end
+
+function removecustomspeedwalk()
+  if string.match(check, "^remo?v?e?$") then
+   cecho("\n<green>use <LightSkyBlue>speed remove * <green>to delete an entry<white>!")
+   cecho("\n<green>use <LightSkyBlue>speed list <green>if you need to see your entries<white>!\n")
+  elseif string.match(line, "^remo?v?e? ") then  
+    removing = string.match(check, "remo?v?e? (%w+)"):upper()
+    for k,v in pairs(myspeedwalks) do
+      if k:upper() == removing then
+        cecho("\n<red>Removed <white>"..k.." <green>from your SpeedWalking list<white>!")
+        myspeedwalks[k] = nil
+      end
+    end
+  end
+end
+
+function bailcheck()
+  for k,v in pairs(myspeedwalks) do
+    local swname = k
+    for k,v in pairs(myspeedwalks[k]) do
+      if k == "direction" then
+        if not string.match(v, ".") then myspeedwalks[swname] = nil; break end
+      elseif k == "delay" then
+        if not string.match(v, ".") then myspeedwalks[swname] = nil; break end
+      end
+    end
+  end
+end
+
+function killeditor()
+if adding_to_speedwalk then killAlias(adding_to_speedwalk) end
+if adding_name then killAlias(adding_name) end
+if adding_notes then killAlias(adding_notes) end
+editingspeedwalk = false
+addingdirection = false
+addingnotes = false
+addingname = false
+addingdelay = false
+editor_text = ""
+cecho("<red>Finished Editing<white>!")
+end
+
+function rootSWeditor()
+  if adding_to_speedwalk then killAlias(adding_to_speedwalk) end
+  if adding_name then killAlias(adding_name) end
+  if adding_notes then killAlias(adding_notes) end
+  tempTimer(0.1, function()  
+  adding_to_speedwalk = tempAlias(".*", [[
+    if matches[1] == "done" then killAlias(adding_to_speedwalk);bailcheck();killeditor() end
+      editor_text = matches[1]
+        if string.match(editor_text,"^done$") then
+          cecho("\n<red>Canceling Entry<white>!")
+          killeditor()
+        elseif addingdirection
+        or addingnotes
+        or addingdelay then
+          handlecustomspeedwalk()
+        elseif editingnotes then
+          handlespeedwalknotes()
+        elseif removingentry then
+          removecustomspeedwalk()
+        end
+  ]])
+  end)
+end --function
+
+function handlespeedwalknotes()
+   if string.match(line, "note") then
+    killeditor()
+    cecho("\n<gold>Editing Notes")
+    editingspeedwalk = true
+    addingnotes = true
+    swnotes = {}
+    line = ""
+    editor_text = ""
+    editingspeedwalk = true
+    cecho("\n<green>what entry would you like to edit<white>?")
+    tempTimer(0.1, function() 
+      adding_notes = tempAlias(".*", [[
+        if matches[1] == "done" then killAlias(adding_notes);bailcheck();killeditor() end
+        if addingnotes then
+          swname = matches[1]
+          cecho("\n<gold>Editing Destination: <white>"..swname)
+          cecho("\n<green>Use list to list your current notes, add will start addition<white>!")
+          cecho("\n<green>rem(ove) will remove the note by number, clear will clear them all<white>!")
+          cecho("\n<red>Use done to cancel<white>!")
+          cecho("\n<green>Use save to finish the entry<white>!")
+          if not table.is_empty(myspeedwalks) then
+            if not table.is_empty(myspeedwalks[swname].notes) then swnotes = myspeedwalks[swname].notes end
+          else
+            cecho("\n<red>Entry does not exits<white>!")
+          end
+          editingnotes = true
+          addingnotes = false
+          rootSWeditor()
+        end
+      ]])
+      end)
+  elseif string.match(editor_text, "remo?v?e?") then
+    local entry = ""
+    entry = tonumber(string.match(editor_text, "remo?v?e? (%d+)"))
+    for k,v in ipairs(swnotes) do if tonumber(k) == entry then cecho("\n<red>Removed <green>"..v);table.remove(swnotes, k) end end
+  elseif string.match(editor_text, "clear") then
+    cecho("\n<red>Notes Cleared<white>!")
+    swnotes = {}
+  elseif string.match(editor_text, "list") then
+    if not table.is_empty(swnotes) then
+      for k,v in ipairs(swnotes) do cecho("<white>#"..k.."-<green>"..v.."\n") end
+    else
+      cecho("\n<red>There are no notes<white>!")
+    end
+  elseif string.match(editor_text, "save") then
+    cecho("\n<green>Notes saved<white>!")
+    myspeedwalks[swname].notes = swnotes
+    killeditor()
+  else  --**Entry**
+    table.insert(swnotes, editor_text)
+  end
+end
+
+function handlecustomspeedwalk()
+  if string.match(line, "speed add") then
+    swinput = {}
+    swnotes = {}
+    editingspeedwalk = true
+    addingname = true
+    editor_text = ""
+    line = ""
+    cecho("\n<green>Adding to Speedwalk<white>! Use done at any time cancel<white>!")
+    cecho("\n<green>How would you like to refer to this destination<white>?")
+      tempTimer(0.1, function() 
+      adding_name = tempAlias(".*", [[
+        if matches[1] == "done" then killAlias(adding_name);bailcheck();killeditor() end
+        if addingname then
+          swname = matches[1]
+          swinput[swname] = {}
+          myspeedwalks[swname] = {direction = "", notes = "", delay = ""}
+          cecho("\n<green>here are a few examples of proper directional input<white>!")
+          cecho("\n     <white>east")
+          cecho("\n     <white>e")
+          cecho("\n     <white>ne")
+          cecho("\n     <white>19w")
+          cecho("\n     <white>look painting")
+          cecho("\n     <white>say please let me in")
+          cecho("\n<gold>Adding Destination: <white>"..swname)
+          cecho("\n<green>You can now start adding directions<white>!")
+          cecho("\n<red>use end when finished or done to cancel<white>!")
+          addingname = false
+          addingdirection = true
+          rootSWeditor()
+        end
+      ]])
+      end)
+  elseif editor_text == "end" then
+    if not addingnotes then cecho("\n<green>would you like to add any notes to the tooltip<white>?");addingnotes = true end
+    if not addingdirection then cecho("\n<green>how long would you like the delay to be<white>?\n <green>0.5 to 1 is recomended");addingnotes = false;addingdelay = true end
+    addingdirection = false
+  elseif editor_text == "yes" then
+    addingnotes = true
+    cecho("\n<green>what would you like to add<white>?")
+    cecho("\n<red>use end when finished or done to cancel<white>!")
+  elseif editor_text == "no" then
+    cecho("\n<green>how long would you like the delay to be<white>?\n <green>0.5 to 1 is recomended")
+    addingnotes = false
+    addingdelay = true
+  else
+    if editor_text then 
+      cecho("\n<gold>Processing: <white>"..editor_text.."\n")
+      if addingdirection then
+          local movenumber = ""
+          local movestring = ""
+          if string.match(editor_text, "^%d+") then
+            movestring = string.match(editor_text, "%d+(.*)")
+            movenumber = string.match(editor_text, "%d+")
+            table.insert(swinput[swname], movenumber.."["..movestring.."]")
+          else
+            table.insert(swinput[swname], "["..editor_text.."]")
+          end
+      elseif addingnotes then
+        table.insert(swnotes, editor_text)
+      elseif addingdelay then
+        myspeedwalks[swname].delay = editor_text
+        cecho("\n<green>Added <white>"..swname.." <green>to your SpeedWalking list<white>!")
+        myspeedwalks[swname].notes = swnotes
+        local string = ""
+        for k,v in ipairs(swinput[swname]) do
+          string = string..v 
+        end
+        myspeedwalks[swname].direction = string
+        killeditor()
+      else
+      
+      end
+    end
+  end 
+  
+end --function
+
+function handlecustomswlist()
+  if string.match(line, "^speed list$") then
+    local swname = "";local customSWpath = "";local customSWdelay = 0;local customSWnotes = ""
+    for k,v in pairs(myspeedwalks) do
+      swname = k
+      
+      for k,v in pairs(myspeedwalks[k]) do
+        if k == "direction" then customSWpath = v end
+        if k == "delay" then customSWdelay = tonumber(v) end
+        if k == "notes" then
+          if not table.is_empty(myspeedwalks[swname].notes) then
+            for k,v in ipairs(myspeedwalks[swname].notes) do
+              customSWnotes = customSWnotes..v..", " 
+            end
+          else
+            customSWnotes = "None"
+          end
+        end
+      end
+      cechoLink("\n<LightSkyBlue>"..k, [[--make these clickable with an array of variables?]], customSWnotes, true)
+      customSWpath = "";customSWdelay = 0;customSWnotes = ""
+    end
+  elseif string.match(line, "list %w+") then
+    line = string.match(line, "list (.*)")
+    if string.match(line, "^%w$") then
+      local check = string.match(line, "^%w$"):upper()
+      for k,v in pairs(myspeedwalks) do
+        if check == string.match(k, "^%w"):upper() then
+          customSWpath = "";customSWdelay = 0
+          local customSWnotes = "";local swname = k
+          for k,v in pairs(myspeedwalks[k]) do
+            if k == "direction" then customSWpath = v end
+            if k == "delay" then customSWdelay = tonumber(v) end
+            if k == "notes" then for k,v in ipairs(myspeedwalks[swname].notes) do customSWnotes = customSWnotes..v..", " end end
+          end
+          cechoLink("\n<LightSkyBlue>"..k, [[--make these clickable with an array of variables?]], customSWnotes, true)
+        end
+      end 
+    elseif string.match(line, "%w+") then
+      local check = string.match(line, "%w+"):upper()
+      for k,v in pairs(myspeedwalks) do
+        local string = k:upper()
+        if string.match(string, check) then
+          customSWpath = "";customSWdelay = 0
+          local customSWnotes = "";local swname = k
+          for k,v in pairs(myspeedwalks[k]) do
+            if k == "direction" then customSWpath = v end
+            if k == "delay" then customSWdelay = tonumber(v) end
+            if k == "notes" then for k,v in ipairs(myspeedwalks[swname].notes) do customSWnotes = customSWnotes..v..", " end end
+          end
+          cechoLink("\n<LightSkyBlue>"..k, [[--make these clickable with an array of variables?]], customSWnotes, true)
+        end
+      end     
+    end
+  end
+end
+
+function handlecustomswfire()
+local check = check:upper()
+  for k,v in pairs(myspeedwalks) do
+    local area = k:upper()
+    if string.match(area, check) then
+      customSWpath = "";customSWdelay = 0
+      local customSWnotes = "";local swname = k;
+      for k,v in pairs(myspeedwalks[k]) do
+        if k == "direction" then customSWpath = v end
+        if k == "delay" then customSWdelay = tonumber(v) end
+        if k == "notes" then for k,v in ipairs(myspeedwalks[swname].notes) do customSWnotes = customSWnotes..v..", " end end
+      end
+      cechoLink("\n<green:red>Click me<green:black> to speedwalk to<white>- <LightSkyBlue>"..k, [[customSW(customSWpath, false, customSWdelay)]], customSWnotes, true)
+      break
+    end
+  end
+end
+
+function handlecustomswclear()
+cecho("\n<red>Are you sure you want to clear the whole list<white>?!\n")
+  tempTimer(0.1, function() 
+      clearing_sw = tempAlias(".*", [[
+      if matches[1] == "done" then killAlias(clearing_sw);bailcheck() end
+        if string.match(matches[1], "Y") 
+        or string.match(matches[1], "y") then
+          cecho("\n<red>Your SpeedWalk list has been cleared<white>!\n")
+          myspeedwalks = {}
+          killAlias(clearing_sw)
+        elseif string.match(matches[1], "N")
+        or string.match(matches[1], "n") then
+          cecho("\n<green>Preserving the list<white>!\n")
+          killAlias(clearing_sw)
+        else
+          cecho("\n<red>Invalid Entry<white>!\n")
+        end
+          
+      ]])
+      end)
+end
+
+function customSW(path, reverse, delay, start_delay)
+	local direction_table = {}
+	local reverse_table = {
+		n 	= "s",
+		e 	= "w",
+		s 	= "n",
+		w 	= "e",
+		nw 	= "se",
+		ne 	= "sw",
+		se 	= "nw",
+		sw 	= "ne",
+		u 	= "d",
+		d 	= "u"
+	}
+
+   for count, direction in rex.gmatch( path, [=[([1-9]+)?([newsdu]|\[[\w\W]+?\])]=] ) do
+		count = (type(tonumber(count)) == "number" and count) or 1
+		direction = direction:gsub( "[%[%]]", "" )
+
+      for i=1, count do 
+			direction_table[#direction_table+1] = direction
+		end
+   end
+
+	local current_delay = start_delay or delay
+	if not reverse then
+		for _, direction in ipairs( direction_table ) do
+			if not delay then
+				send( direction )
+			else
+				tempTimer( current_delay, function () send( direction ) end )
+				current_delay = current_delay + delay
+			end
+		end
+	else
+		for i = #direction_table, 1, -1 do
+			local reversed = reverse_table[direction_table[i]] or direction_table[i]
+
+			if not delay then
+				send( reversed )
+			else
+				tempTimer( current_delay, function () send( reversed ) end )
+				current_delay = current_delay + delay
+			end
+    end
+	end
+end
+
