@@ -1,0 +1,20 @@
+pattern = ^(?:go ?to|speed) (.*)
+
+line = matches[1]
+check = matches[2]
+if string.match(line, "^speed add$") then
+  handlecustomspeedwalk()
+elseif string.match(line, "speed remo?v?e?") then
+  removecustomspeedwalk()
+elseif string.match(check, "note") then
+  handlespeedwalknotes()
+elseif string.match(check, "list")then
+  handlecustomswlist()
+elseif string.match(check, "clear")then
+  handlecustomswclear()
+elseif string.match(line, "go ?to") then
+  handlecustomswfire()
+end 
+
+
+
