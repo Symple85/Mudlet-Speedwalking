@@ -1,6 +1,9 @@
 # Mudlet-Speedwalking
 Generic Speed Walking Package that allows for custom lists and complex command inputs.
+
 Searchable list, echos back a clickable link to start speedwalking with and customizable notes as tooltips.
+
+Please use issues to report any bugs and new ideas!
 
 To install -
   1. Download the .mpackage to an easily accessible location.
