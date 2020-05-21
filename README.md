@@ -52,7 +52,15 @@ Aliases are
     
     ***when you click this it will send your speedwalking path to the mud with the delay you setup during addition***
   
+  6. go to/goto or speed stop
   
+     -Will stop your walking early.
+     
+     ***You can set up triggers or hotkeys to stop speedwalking by putting "stopSW = true" in the script box***
+  
+ v1.1 
+  -added break check in the speedwalk function to stop it early if needed.
+  -changed autosave from 1 second to 5 seconds. Just felt like it was overkill, might still be...
 
 
 <a href="https://ibb.co/m4Hqtx8"><img src="https://i.ibb.co/bXrBLfJ/Speed-Walk.png" alt="Speed-Walk" border="0"></a>
