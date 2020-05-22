@@ -66,6 +66,7 @@ Aliases are
 
  v1.2
    -Added a list command to goto in case people wanted more than one reported back for clicking
+   
    -Fixes to the note system.
    
     -Had plans to do an addition/removal selection but decided it wasnt needed so took out the prompt telling you to do so. 
