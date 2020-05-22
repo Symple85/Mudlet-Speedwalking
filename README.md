@@ -71,6 +71,8 @@ Aliases are
     -Saving and discarding wasnt working properly. I had it calling to the original table instead of making a temp one for editing. It will now appropriatly only save your notes when you end with save and discard any changes if you end with done.
     -Realized that you can't highlight clickable links so made the speed list click function send the name of the area to the command input line for easy copy pasting of entry names.
   -Added a list command to goto in case people wanted more than one reported back for clicking
+  
+  
  v1.1 
   -added break check in the speedwalk function to stop it early if needed.
   -changed autosave from 1 second to 5 seconds. Just felt like it was overkill, might still be...
