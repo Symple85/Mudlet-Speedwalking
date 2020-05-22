@@ -51,13 +51,26 @@ Aliases are
     -Will search for the first thing to match * and display it with notes as tooltips
     
     ***when you click this it will send your speedwalking path to the mud with the delay you setup during addition***
-  
+    
+   5a. go to * or goto list *
+   
+    -Will search anything that matches * and display it with notes as tooltips
+    
+    ***when you click this it will send your speedwalking path to the mud with the delay you setup during addition***
+    
   6. go to/goto or speed stop
   
-     -Will stop your walking early.
+    -Will stop your walking early.
      
      ***You can set up triggers or hotkeys to stop speedwalking by putting "stopSW = true" in the script box***
-  
+
+ v1.2
+  -Fixes to the note system.
+    -Had plans to do an addition/removal selection but decided it wasnt needed so took out the prompt telling you to do so.
+    -Was accepting entry names in the editor only if it was an exact match, otherwise would cause issues. It will now search for what   you enter and attempt to find it. Also handles and reports if it's not found in any form.
+    -Saving and discarding wasnt working properly. I had it calling to the original table instead of making a temp one for editing. It will now appropriatly only save your notes when you end with save and discard any changes if you end with done.
+    -Realized that you can't highlight clickable links so made the speed list click function send the name of the area to the command input line for easy copy pasting of entry names.
+  -Added a list command to goto in case people wanted more than one reported back for clicking
  v1.1 
   -added break check in the speedwalk function to stop it early if needed.
   -changed autosave from 1 second to 5 seconds. Just felt like it was overkill, might still be...
